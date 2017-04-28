@@ -10,6 +10,7 @@ public class JoinTable extends Table {
 
     Table first_join_tab;
     Table second_join_tab;
+    Conditional join_cond;
 
     /**
      * @param t1 - One of the tables for the join
@@ -23,6 +24,7 @@ public class JoinTable extends Table {
 	super("Joining " + t1.toString() + " " + t2.toString() + " on condiition " + c.toString());
 	first_join_tab = t1;
 	second_join_tab = t2;
+        join_cond = c;
     }
 
     public Table [] my_children () {
@@ -42,6 +44,24 @@ public class JoinTable extends Table {
 
 	// It should be done with an efficient algorithm based on
 	// sorting or hashing
+        
+        if (join_cond instanceof ANDConditional) {
+	    for (int i = 0; i < ((ANDConditional) join_cond).my_conds.length; i++) {
+		((ANDConditional)join_cond).my_conds[i].set_left_leaf_table(first_join_tab);
+                ((ANDConditional)join_cond).my_conds[i].set_right_leaf_table(second_join_tab);
+            }
+	}
+        else {
+	    ((ComparisonConditional) join_cond).set_left_leaf_table(first_join_tab);
+            ((ComparisonConditional) join_cond).set_right_leaf_table(second_join_tab);
+        }
+        
+        ArrayList<Tuple> tuples1 = first_join_tab.evaluate();
+        ArrayList<Tuple> tuples2 = second_join_tab.evaluate();
+        ListIterator iterate_tuples1 = tuples1.listIterator(0);
+        ListIterator iterate_tuples2 = tuples2.listIterator(0);
+        
+        
 
 	profile_intermediate_tables(tuples_to_return);
 	return tuples_to_return;
