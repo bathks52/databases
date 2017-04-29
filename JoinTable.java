@@ -25,6 +25,18 @@ public class JoinTable extends Table {
 	first_join_tab = t1;
 	second_join_tab = t2;
         join_cond = c;
+        
+        attr_names = concat(t1.attr_names, t2.attr_names);
+        attr_types = concat(t1.attr_types, t2.attr_types);
+    }
+    
+    private String[] concat(String[] a, String[] b) {
+         int aLen = a.length;
+         int bLen = b.length;
+         String[] c= new String[aLen+bLen];
+         System.arraycopy(a, 0, c, 0, aLen);
+         System.arraycopy(b, 0, c, aLen, bLen);
+         return c;
     }
 
     public Table [] my_children () {
@@ -38,12 +50,6 @@ public class JoinTable extends Table {
 
     public ArrayList<Tuple> evaluate() {
 	ArrayList<Tuple> tuples_to_return = new ArrayList<Tuple>();
-
-	// Here you need to add the correct tuples to tuples_to_return
-	// for this operation
-
-	// It should be done with an efficient algorithm based on
-	// sorting or hashing
         
         if (join_cond instanceof ANDConditional) {
 	    for (int i = 0; i < ((ANDConditional) join_cond).my_conds.length; i++) {
@@ -58,14 +64,45 @@ public class JoinTable extends Table {
         
         ArrayList<Tuple> tuples1 = first_join_tab.evaluate();
         ArrayList<Tuple> tuples2 = second_join_tab.evaluate();
-        ListIterator iterate_tuples1 = tuples1.listIterator(0);
-        ListIterator iterate_tuples2 = tuples2.listIterator(0);
         
+        // Sort lists on join key
+        String sortAttrLeft = ((ComparisonConditional)join_cond).left.attrib_name;
+        String sortAttrRight = ((ComparisonConditional)join_cond).right.attrib_name;
+        tuples1.sort(new TupleComparator(first_join_tab.attr_names, sortAttrLeft));
+        //tuples2.sort(new TupleComparator(second_join_tab.attr_names, sortAttrRight));
         
-
+        //ListIterator iterate_tuples1 = tuples1.listIterator(0);
+        //ListIterator iterate_tuples2 = tuples2.listIterator(0);
+        
+        // Just testing, ignore
+        tuples_to_return.addAll(tuples1);
+        tuples_to_return.addAll(tuples2);
+        
 	profile_intermediate_tables(tuples_to_return);
 	return tuples_to_return;
 
-    }	
+    }
+    
+    public class TupleComparator implements Comparator<Tuple> {
+       
+        public String sortBy;
+        public String[] attr_names;
+        
+        public TupleComparator(String[] attr_names, String attrib_name) {
+           sortBy = attrib_name;
+           this.attr_names = attr_names;
+        }
+       
+        @Override
+        public int compare(Tuple t1, Tuple t2) {
+            if (attr_names.length < 1) {
+                return 0;
+            }
+            //String attr = attr_names[0];
+            ColumnValue val1 = t1.get_val(sortBy);
+            ColumnValue val2 = t2.get_val(sortBy);
+            return val1.compareTo(val2);
+        }
+    }
 
 }
