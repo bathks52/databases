@@ -19,6 +19,8 @@ public class DupsRemovedTable extends Table {
 	super("Removing duplicates from " + t.toString());
 	tab_dups_removed_from = t;
 
+        attr_names = t.attrib_names();
+	attr_types = t.attrib_types();
     }
 
     public Table [] my_children () {
