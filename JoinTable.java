@@ -51,25 +51,53 @@ public class JoinTable extends Table {
     public ArrayList<Tuple> evaluate() {
 	ArrayList<Tuple> tuples_to_return = new ArrayList<Tuple>();
         
-        if (join_cond instanceof ANDConditional) {
-	    for (int i = 0; i < ((ANDConditional) join_cond).my_conds.length; i++) {
-		((ANDConditional)join_cond).my_conds[i].set_left_leaf_table(first_join_tab);
-                ((ANDConditional)join_cond).my_conds[i].set_right_leaf_table(second_join_tab);
-            }
-	}
-        else {
-	    ((ComparisonConditional) join_cond).set_left_leaf_table(first_join_tab);
-            ((ComparisonConditional) join_cond).set_right_leaf_table(second_join_tab);
-        }
+//        if (join_cond instanceof ANDConditional) {
+//	    for (int i = 0; i < ((ANDConditional) join_cond).my_conds.length; i++) {
+//		((ANDConditional)join_cond).my_conds[i].set_left_leaf_table(first_join_tab);
+//                ((ANDConditional)join_cond).my_conds[i].set_right_leaf_table(second_join_tab);
+//            }
+//	}
+//        else {
+//	    ((ComparisonConditional) join_cond).set_left_leaf_table(first_join_tab);
+//            ((ComparisonConditional) join_cond).set_right_leaf_table(second_join_tab);
+//        }
         
         ArrayList<Tuple> tuples1 = first_join_tab.evaluate();
         ArrayList<Tuple> tuples2 = second_join_tab.evaluate();
         
-        // Sort lists on join key
-        String sortAttrLeft = ((ComparisonConditional)join_cond).left.attrib_name;
-        String sortAttrRight = ((ComparisonConditional)join_cond).right.attrib_name;
-        tuples1.sort(new TupleComparator(first_join_tab.attr_names, sortAttrLeft));
-        //tuples2.sort(new TupleComparator(second_join_tab.attr_names, sortAttrRight));
+        if (join_cond instanceof ANDConditional) {
+            
+        }
+        else {
+            // Sort lists on join key
+            String sortAttrLeft = ((ComparisonConditional)join_cond).left.attrib_name;
+            String sortAttrRight = ((ComparisonConditional)join_cond).right.attrib_name;
+            
+            // Check which table each side of the condition uses
+            if (((ComparisonConditional)join_cond).left.my_table.equals(first_join_tab)) {
+                tuples1.sort(new TupleComparator(first_join_tab.attr_names, sortAttrLeft));
+                if (((ComparisonConditional)join_cond).right.my_table.equals(second_join_tab)) {
+                    tuples2.sort(new TupleComparator(second_join_tab.attr_names, sortAttrRight));
+                }
+            }
+            else if (((ComparisonConditional)join_cond).left.my_table.equals(second_join_tab)){
+                tuples2.sort(new TupleComparator(second_join_tab.attr_names, sortAttrLeft));
+                if (((ComparisonConditional)join_cond).right.my_table.equals(first_join_tab)) {
+                    tuples1.sort(new TupleComparator(first_join_tab.attr_names, sortAttrRight));
+                }
+            }
+            
+            ListIterator iterate_tuples1 = tuples1.listIterator(0);
+            ListIterator iterate_tuples2 = tuples2.listIterator(0);
+            
+            while (iterate_tuples1.hasNext()) {
+                Tuple t1 = (Tuple)iterate_tuples1.next();
+                while (iterate_tuples2.hasNext()) {
+                    Tuple t2 = (Tuple)iterate_tuples2.next();
+                    //Check for equality somehow
+                }
+            }
+        }
         
         //ListIterator iterate_tuples1 = tuples1.listIterator(0);
         //ListIterator iterate_tuples2 = tuples2.listIterator(0);
